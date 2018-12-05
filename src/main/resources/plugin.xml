@@ -2,9 +2,17 @@
 	<extension
             point="com.katalon.platform.extensions">
         <point
-                id="com.katalon.plugin.smart_xpath.SmartXpathEventListenerInitializer"
+                id="thanhto.smartxpathplugin.SmartXPathEventListenerInitializer"
                 extensionPointId="com.katalon.platform.api.extension.event"
-                implementationClass="com.katalon.plugin.smart_xpath.SmartXpathEventListenerInitializer">
+                implementationClass="thanhto.smartxpathplugin.SmartXpathEventListenerInitializer">
+        </point>
+    </extension>
+    	<extension
+            point="com.katalon.platform.extensions">
+        <point
+                id="thanhto.smartxpathplugin.SmartXPathToolItemWithMenu"
+                extensionPointId="com.katalon.platform.api.extension.ui.toolbar.withMenuItem"
+                implementationClass="thanhto.smartxpathplugin.SmartXPathToolItemWithMenuDescription">
         </point>
     </extension>
 </plugin>

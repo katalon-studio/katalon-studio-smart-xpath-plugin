@@ -1,4 +1,4 @@
-Bundle-SymbolicName: com.katalon.katalon-studio-smart-xpath-plugin;singleton:=true
+Bundle-SymbolicName: thanhto.smartxpathplugin;singleton:=true
 Require-Bundle: com.katalon.platform,
  org.eclipse.e4.core.di,
  org.eclipse.e4.core.contexts,
