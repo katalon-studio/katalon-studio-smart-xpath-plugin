@@ -1,4 +1,4 @@
-package thanhto.smartxpathplugin;
+package com.katalon.plugin.smart_xpath;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -22,7 +22,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		smartXPathEnable.addSelectionListener(new SelectionAdapter(){
 			 @Override
 	            public void widgetSelected(SelectionEvent e) {
-				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("thanhto.smartxpathplugin");
+				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("com.katalon.plugin.smart_xpath");
 				 	store.putBoolean("SmartXPathEnabled", true);
 	            }	
 		});
@@ -33,7 +33,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		smartXPathDisable.addSelectionListener(new SelectionAdapter(){
 			 @Override
 	            public void widgetSelected(SelectionEvent e) {
-				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("thanhto.smartxpathplugin");
+				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("com.katalon.plugin.smart_xpath");
 				 	store.putBoolean("SmartXPathEnabled", false);
 	            }
 		});
@@ -43,7 +43,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	@Override
 	public String iconUrl() {
-		return "platform:/plugin/thanhto.smartxpathplugin/icons/branding_16.png";
+		return "platform:/plugin/com.katalon.plugin.smart_xpath/icons/bug_16@2x.png";
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	@Override
 	public String toolItemId() {
-		return "thanhto.smartxpathplugin.smartXpathToolItemWithDescription";
+		return "com.katalon.plugin.smart_xpath.smartXpathToolItemWithDescription";
 	}
 	
 }

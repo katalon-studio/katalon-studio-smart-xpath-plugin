@@ -1,4 +1,4 @@
-package thanhto.smartxpathplugin;
+package com.katalon.plugin.smart_xpath;
 
 import com.katalon.platform.api.extension.event.EventListener;
 import com.katalon.platform.api.extension.event.EventListenerInitializer;

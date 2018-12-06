@@ -1,4 +1,4 @@
-Bundle-SymbolicName: thanhto.smartxpathplugin;singleton:=true
+Bundle-SymbolicName: com.katalon.katalon-studio-smart-xpath;singleton:=true
 Require-Bundle: com.katalon.platform,
  org.eclipse.e4.core.di,
  org.eclipse.e4.core.contexts,
@@ -12,3 +12,5 @@ Bundle-ActivationPolicy: lazy
 Export-Package: com.katalon.plugin.smart_xpath
 Bundle-ClassPath: .
 Bundle-Name: Katalon Studio Smart XPath Plugin
+Bundle-Version: 1.0
+Bundle-Vendor: Katalon LLC
