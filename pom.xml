@@ -121,7 +121,7 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package>com.katalon.plugin.smart_xpath*</Export-Package>
+						<Export-Package>com.katalon.plugin.smart_xpath</Export-Package>
 						<Import-Package></Import-Package>
 						<_include>src/main/resources/META-INF/MANIFEST.MF</_include>
 						<_noee>true</_noee>

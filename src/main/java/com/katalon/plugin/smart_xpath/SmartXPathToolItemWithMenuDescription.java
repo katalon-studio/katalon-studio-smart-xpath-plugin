@@ -1,5 +1,7 @@
 package com.katalon.plugin.smart_xpath;
 
+import java.io.IOException;
+
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.swt.SWT;
@@ -10,6 +12,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
 import com.katalon.platform.api.extension.ui.toolbar.ToolItemWithMenuDescription;
+import com.katalon.platform.api.model.Entity;
+import com.katalon.platform.api.preference.PluginPreferenceStore;
+import com.katalon.platform.api.service.ApplicationManager;
 
 public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDescription {
 
@@ -19,11 +24,18 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		MenuItem smartXPathEnable = new MenuItem(newMenu, SWT.PUSH);
 		smartXPathEnable.setText("Smart XPath Enable");
 		smartXPathEnable.setToolTipText("Enable Smart XPath");
+
 		smartXPathEnable.addSelectionListener(new SelectionAdapter(){
 			 @Override
 	            public void widgetSelected(SelectionEvent e) {
-				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("com.katalon.plugin.smart_xpath");
-				 	store.putBoolean("SmartXPathEnabled", true);
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+					PluginPreferenceStore preferenceStore = new PluginPreferenceStore(currentProject.getFolderLocation()
+							, "com.katalon.plugin.smart_xpath");
+					try {
+						preferenceStore.setProperty("SmartXPathEnabled", true);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 	            }	
 		});
 		
@@ -33,8 +45,14 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		smartXPathDisable.addSelectionListener(new SelectionAdapter(){
 			 @Override
 	            public void widgetSelected(SelectionEvent e) {
-				 	IEclipsePreferences store = InstanceScope.INSTANCE.getNode("com.katalon.plugin.smart_xpath");
-				 	store.putBoolean("SmartXPathEnabled", false);
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+					PluginPreferenceStore preferenceStore = new PluginPreferenceStore(currentProject.getFolderLocation()
+							, "com.katalon.plugin.smart_xpath");
+					try {
+						preferenceStore.setProperty("SmartXPathEnabled", false);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 	            }
 		});
 		
@@ -43,7 +61,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	@Override
 	public String iconUrl() {
-		return "platform:/plugin/com.katalon.plugin.smart_xpath/icons/bug_16@2x.png";
+		return "platform:/plugin/com.katalon.katalon-studio-smart-xpath/icons/bug_16@2x.png";
 	}
 
 	@Override
