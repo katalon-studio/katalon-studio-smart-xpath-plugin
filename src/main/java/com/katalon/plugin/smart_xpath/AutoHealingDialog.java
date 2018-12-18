@@ -1,22 +1,15 @@
 package com.katalon.plugin.smart_xpath;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.CheckboxCellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
-import org.eclipse.jface.viewers.EditingSupport;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
@@ -31,25 +24,18 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
-import com.katalon.platform.api.model.ProjectEntity;
-import com.katalon.platform.api.service.ApplicationManager;
-
 public class AutoHealingDialog extends Dialog {
 	protected Composite tablePropertyComposite;
 	private String dialogTitle = "";
 	private TableViewer tbViewer;
 	private TableColumnLayout tableColumnLayout;
 	private Table table;
-	private List<BrokenTestObject> autoHealingEntities;
-	private List<BrokenTestObject> backUpAutoHealingEntities;
+	private List<BrokenTestObject> unapprovedBrokenEntities;
 	private List<BrokenTestObject> approvedAutoHealingEntities;
-
+	
 	protected AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
-		autoHealingEntities = new ArrayList<>();
-		backUpAutoHealingEntities = new ArrayList<>();
+		unapprovedBrokenEntities = new ArrayList<>();
 		approvedAutoHealingEntities = new ArrayList<>();
 	}
 
@@ -63,7 +49,7 @@ public class AutoHealingDialog extends Dialog {
 	protected Control createDialogArea(Composite parent) {
 		tablePropertyComposite = new Composite(parent, SWT.NONE);
 		GridData ldTableComposite = new GridData(SWT.FILL, SWT.FILL, true, true);
-		ldTableComposite.widthHint = 800;
+		ldTableComposite.widthHint = 1000;
 		ldTableComposite.heightHint = 380;
 		tablePropertyComposite.setLayoutData(ldTableComposite);
 		tableColumnLayout = new TableColumnLayout();
@@ -76,7 +62,7 @@ public class AutoHealingDialog extends Dialog {
 
 		tbViewer.setContentProvider(ArrayContentProvider.getInstance());
 		loadAutoHealingEntities();
-		tbViewer.setInput(autoHealingEntities);
+		tbViewer.setInput(unapprovedBrokenEntities);
 
 		table = tbViewer.getTable();
 		table.setHeaderVisible(true);
@@ -126,10 +112,10 @@ public class AutoHealingDialog extends Dialog {
 
 		colApproveNewXPath.setEditingSupport(new CheckBoxColumnEditingSupport(tbViewer));
 
-		tableColumnLayout.setColumnData(colObjectId.getColumn(), new ColumnWeightData(30, 100));
+		tableColumnLayout.setColumnData(colObjectId.getColumn(), new ColumnWeightData(35, 100));
 		tableColumnLayout.setColumnData(colOldXPath.getColumn(), new ColumnWeightData(30, 100));
 		tableColumnLayout.setColumnData(colNewXPath.getColumn(), new ColumnWeightData(30, 100));
-		tableColumnLayout.setColumnData(colApproveNewXPath.getColumn(), new ColumnWeightData(10, 100));
+		tableColumnLayout.setColumnData(colApproveNewXPath.getColumn(), new ColumnWeightData(5, 100));
 	}
 
 	@Override
@@ -169,8 +155,11 @@ public class AutoHealingDialog extends Dialog {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void okPressed() {
-		IStructuredSelection selection = (IStructuredSelection) tbViewer.getSelection();
-		approvedAutoHealingEntities = selection.toList();
+		approvedAutoHealingEntities.clear();
+		((List<BrokenTestObject>) tbViewer.getInput()).stream().filter(a -> a.getApproved() == true).forEach(a -> {
+			approvedAutoHealingEntities.add(a);
+			unapprovedBrokenEntities.remove(a);
+		});
 		super.okPressed();
 	}
 
@@ -187,33 +176,12 @@ public class AutoHealingDialog extends Dialog {
 	}
 
 	public void loadAutoHealingEntities() {
-		backUpAutoHealingEntities.clear();
-		backUpAutoHealingEntities.addAll(autoHealingEntities);
-		autoHealingEntities.clear();
-		try {
-			Gson gson = new Gson();
-			ProjectEntity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
-			System.out.println("Attempting to read current project directory");
-			if (projectEntity != null) {
-				System.out.println(
-						"Current project directory detected, attempt to read auto-healing.json in smart_xpath");
-				String projectDir = projectEntity.getFolderLocation();
-				String jsonAutoHealingDir = StringUtils.getStandardPath(projectDir + "/smart_xpath/auto-healing.json");
-				JsonReader reader = new JsonReader(new FileReader(jsonAutoHealingDir));
-				System.out
-						.println("auto-healing.json is read, attempting to parse the content into broken test objects");
-				BrokenTestObjects brokenTestObjects = gson.fromJson(reader, BrokenTestObjects.class);
-				autoHealingEntities = brokenTestObjects.getBrokenTestObjects();
-				// Remove potential threats
-				autoHealingEntities.removeAll(Collections.singleton(null));
-				System.out.println("Broken test objects parsed successfully");
-			} else {
-				System.out.println("Current project directory is not detected, no project is open");
-			}
-		} catch (FileNotFoundException e) {
-			System.out.println("/smart_xpath/auto-healing.json is not detected, no broken test objects are loaded");
-			e.printStackTrace(System.out);
-		}
+		unapprovedBrokenEntities.clear();
+		unapprovedBrokenEntities = AutoHealingController.readUnapprovedBrokenTestObjects();
+	}
+	
+	public List<BrokenTestObject> getUnapprovedAutoHealingEntities(){
+		return unapprovedBrokenEntities;
 	}
 
 	public List<BrokenTestObject> getApprovedAutoHealingEntities() {

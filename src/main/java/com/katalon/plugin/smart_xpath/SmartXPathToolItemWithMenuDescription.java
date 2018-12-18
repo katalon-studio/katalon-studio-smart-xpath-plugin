@@ -1,7 +1,13 @@
 package com.katalon.plugin.smart_xpath;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -122,12 +128,46 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AutoHealingDialog autoHealingDialog = new AutoHealingDialog(parent.getShell());
+				List<BrokenTestObject> approvedAutoHealingEntities = autoHealingDialog.getApprovedAutoHealingEntities();
+				List<BrokenTestObject> unapprovedAutoHealingEntities = autoHealingDialog
+						.getUnapprovedAutoHealingEntities();
 				if (autoHealingDialog.open() == IDialogConstants.OK_ID) {
-					AutoHealer.autoHealBrokenTestObjects(autoHealingDialog.getApprovedAutoHealingEntities());
+
+					boolean autoHealingSucceeded = AutoHealingController.autoHealBrokenTestObjects(parent.getShell(),
+							approvedAutoHealingEntities);
+
+					if (autoHealingSucceeded) {
+						ProjectEntity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+						if (projectEntity != null) {
+							String pathToApprovedJson = projectEntity.getFolderLocation() + "/"
+									+ SmartXPathConstants.SMART_XPATH_FOLER_NAME + "/"
+									+ SmartXPathConstants.APPROVED_FILE_NAME + ".json";
+							updateApprovedJsonFile(approvedAutoHealingEntities, pathToApprovedJson);
+							String pathToWaitingForApprovalJson = projectEntity.getFolderLocation() + "/"
+									+ SmartXPathConstants.SMART_XPATH_FOLER_NAME + "/"
+									+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_NAME + ".json";
+							updateApprovedJsonFile(unapprovedAutoHealingEntities, pathToWaitingForApprovalJson);
+						}
+					}
 				}
 			}
 		});
 		return autoHealing;
+	}
+		
+	private void updateApprovedJsonFile(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
+		try {
+			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					monitor.beginTask("Updating " + filePath  + "...", 1);
+					AutoHealingController.updateFileWithBrokenTestObjects(brokenTestObjectsToUpdate,
+							filePath);
+				}
+			});
+		} catch (Exception ex) {
+			ex.printStackTrace(System.out);
+		}
 	}
 
 	@Override
