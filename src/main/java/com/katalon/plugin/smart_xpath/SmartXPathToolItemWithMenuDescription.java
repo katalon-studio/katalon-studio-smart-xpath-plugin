@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.MenuItem;
 
 import com.katalon.platform.api.exception.ResourceException;
 import com.katalon.platform.api.extension.ToolItemWithMenuDescription;
-import com.katalon.platform.api.model.ProjectEntity;
+import com.katalon.platform.api.model.Entity;
 import com.katalon.platform.api.preference.PluginPreference;
 import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.constant.SmartXPathConstants;
@@ -62,7 +62,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 		// Re-evaluate the PreferenceStore and add the appropriate menu item
 		try {
-			ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+			Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 			if (currentProject != null) {
 				PluginPreference preferenceStore = ApplicationManager.getInstance().
 						getPreferenceManager().getPluginPreference(currentProject.getId(),
@@ -91,7 +91,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				try {
 					// Retrieve PreferenceStore on click in case user installed
 					// this plug-in when no project was opened
-					ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager()
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager()
 							.getCurrentProject();
 					PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
 							.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
@@ -116,7 +116,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				try {
 					// Retrieve PreferenceStore again in case the user installed
 					// the plugin when no project was opened
-					ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager()
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager()
 							.getCurrentProject();
 					PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
 							.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
@@ -150,7 +150,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 							approvedAutoHealingEntities);
 
 					if (autoHealingSucceeded) {
-						ProjectEntity projectEntity = ApplicationManager.getInstance().getProjectManager()
+						Entity projectEntity = ApplicationManager.getInstance().getProjectManager()
 								.getCurrentProject();
 						if (projectEntity != null) {
 							String pathToApprovedJson = projectEntity.getFolderLocation() + SmartXPathConstants.APPROVED_FILE_SUFFIX;

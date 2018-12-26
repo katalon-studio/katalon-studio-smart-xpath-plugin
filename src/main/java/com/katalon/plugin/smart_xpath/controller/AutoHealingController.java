@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import com.katalon.platform.api.model.ProjectEntity;
+import com.katalon.platform.api.model.Entity;
 import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.constant.SmartXPathConstants;
 import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
@@ -68,7 +68,7 @@ public class AutoHealingController {
 	
 	private static void autoHealBrokenTestObjects(List<BrokenTestObject> approvedAutoHealingEntities)
 			throws XPathExpressionException, ParserConfigurationException, TransformerException, SAXException, IOException {
-		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+		Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 		if (currentProject != null) {
 			String currentProjectDir = currentProject.getFolderLocation();
 			for (BrokenTestObject brokenTestObject : approvedAutoHealingEntities) {
@@ -100,7 +100,7 @@ public class AutoHealingController {
 	public static List<BrokenTestObject> readUnapprovedBrokenTestObjects() {
 		try {
 			Gson gson = new Gson();
-			ProjectEntity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+			Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 			if (projectEntity != null) {
 				String projectDir = projectEntity.getFolderLocation();
 				String jsonAutoHealingDir = StringUtils.getStandardPath(projectDir + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX);
@@ -171,7 +171,7 @@ public class AutoHealingController {
 		}
 	}
 
-	private static File createSmartXPathFile(ProjectEntity projectEntity, String fileName) {
+	private static File createSmartXPathFile(Entity projectEntity, String fileName) {
 		try {
 			String smartXPathDir = StringUtils.getStandardPath(projectEntity.getFolderLocation() + SmartXPathConstants.SMART_XPATH_FOLDER_SUFFIX);
 			boolean smartXPathFolderExists = new File(smartXPathDir).isDirectory();
@@ -207,7 +207,7 @@ public class AutoHealingController {
 		return false;
 	}
 	
-	public static void createNecessarySmartXPathFiles(ProjectEntity projectEntity){
+	public static void createNecessarySmartXPathFiles(Entity projectEntity){
 		createSmartXPathFile(projectEntity, "waiting-for-approval");
 		createSmartXPathFile(projectEntity, "approved");
 	}
