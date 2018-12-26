@@ -1,4 +1,4 @@
-package com.katalon.plugin.smart_xpath;
+package com.katalon.plugin.smart_xpath.entity;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

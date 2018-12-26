@@ -72,14 +72,13 @@
 			<version>3.105.3</version>
 			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.katalon</groupId>
 			<artifactId>com.katalon.platform</artifactId>
 			<version>1.0.0</version>
 			<scope>system</scope>
 			<systemPath>
-                ${basedir}/thirdparty/com.katalon.platform-1.0.0.jar
+                ${basedir}/thirdparty/com.katalon.platform-1.0.1.jar
             </systemPath>
 		</dependency>
 		<dependency>

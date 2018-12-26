@@ -1,11 +1,10 @@
-package com.katalon.plugin.smart_xpath;
+package com.katalon.plugin.smart_xpath.controller;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -40,9 +39,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.katalon.platform.api.model.ProjectEntity;
 import com.katalon.platform.api.service.ApplicationManager;
+import com.katalon.plugin.smart_xpath.constant.SmartXPathConstants;
+import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
+import com.katalon.plugin.smart_xpath.entity.BrokenTestObjects;
+import com.katalon.plugin.smart_xpath.util.StringUtils;
 
-public class AutoHealingController {
-
+public class AutoHealingController {	
 	public static boolean autoHealBrokenTestObjects(Shell shell, List<BrokenTestObject> approvedAutoHealingEntities) {
 		try {
 			new ProgressMonitorDialog(shell).run(true, false, new IRunnableWithProgress() {
@@ -101,10 +103,7 @@ public class AutoHealingController {
 			ProjectEntity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 			if (projectEntity != null) {
 				String projectDir = projectEntity.getFolderLocation();
-				String jsonAutoHealingDir = StringUtils.getStandardPath(projectDir 
-						+ "/" + SmartXPathConstants.SMART_XPATH_FOLER_NAME 
-						+ "/" + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_NAME  
-						+ ".json");
+				String jsonAutoHealingDir = StringUtils.getStandardPath(projectDir + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX);
 				JsonReader reader = new JsonReader(new FileReader(jsonAutoHealingDir));
 				BrokenTestObjects brokenTestObjects = gson.fromJson(reader, BrokenTestObjects.class);
 				List<BrokenTestObject> unapprovedBrokenTestObjects = brokenTestObjects.getBrokenTestObjects();
@@ -115,27 +114,27 @@ public class AutoHealingController {
 				System.out.println("Current project directory is not detected, no project is open");
 			}
 		} catch (FileNotFoundException e) {
-			System.out.println("/" + SmartXPathConstants.SMART_XPATH_FOLER_NAME 
-					+ "/" + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_NAME  
-					+ ".json is not detected, no broken test objects are loaded");
+			System.out.println(SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX + "is not detected, no broken test objects are loaded");
 			e.printStackTrace(System.out);
 		}
 		return null;
 	}
 	
-	public static void updateFileWithBrokenTestObjects(List<BrokenTestObject> brokenTestObjectsToUpdate,
+	/**
+	 * Set content of the file to a BrokenTestObjects entity which consists of a list of BrokenTestObjects
+	 */
+	public static void writeToFilesWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate,
 			String filePath) {
 		try {
 			BrokenTestObjects brokenTestObjects = new BrokenTestObjects();
 			brokenTestObjects.setBrokenTestObjects(brokenTestObjectsToUpdate);
-			Gson gson = new GsonBuilder().create();
-			String jsonString = gson.toJson(brokenTestObjects);
-			FileOutputStream fOut = new FileOutputStream(filePath);
-			OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-			myOutWriter.write(jsonString);
-			myOutWriter.close();
-			fOut.close();
-
+			File file = new File(filePath);
+			if(file.exists()){
+				ObjectMapper mapper = new ObjectMapper();
+				mapper.enable(SerializationFeature.INDENT_OUTPUT);
+				brokenTestObjectsToUpdate.stream().forEach(a -> System.out.println(a.getApproved()));
+				mapper.writeValue(file, brokenTestObjects);
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace(System.out);
 		} catch (IOException e) {
@@ -143,10 +142,38 @@ public class AutoHealingController {
 		}
 	}
 	
+    // Assume a JSON file with a JSON object containing at least a JSON array, this method
+    // appends @arg1 to @arg2 by replacing "]}" with "@arg1]}"
+    // Note that if the array is initially empty then ",@arg1" will be written in between,
+    // thus at any given time [0] will be a null object
+	public static void appendToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
+		try {
+			RandomAccessFile randomAccessFile = new RandomAccessFile(filePath, "rw");
+			// Set cursor to the position of "]"
+			long pos = randomAccessFile.length();
+			while (randomAccessFile.length() > 0) {
+				pos--;
+				randomAccessFile.seek(pos);
+				if (randomAccessFile.readByte() == ']') {
+					randomAccessFile.seek(pos);
+					break;
+				}
+			}
+			for(BrokenTestObject brokenTestObject : brokenTestObjectsToUpdate){
+				Gson gson = new GsonBuilder().create();
+				String jsonString = gson.toJson(brokenTestObject);
+				randomAccessFile.writeBytes("\n," + jsonString + "\n");	
+			}
+			randomAccessFile.writeBytes("\n]\n}");
+			randomAccessFile.close();
+		} catch (IOException e) {
+			e.printStackTrace(System.out);
+		}
+	}
 
 	private static File createSmartXPathFile(ProjectEntity projectEntity, String fileName) {
 		try {
-			String smartXPathDir = StringUtils.getStandardPath(projectEntity.getFolderLocation() + "/" + SmartXPathConstants.SMART_XPATH_FOLER_NAME);
+			String smartXPathDir = StringUtils.getStandardPath(projectEntity.getFolderLocation() + SmartXPathConstants.SMART_XPATH_FOLDER_SUFFIX);
 			boolean smartXPathFolderExists = new File(smartXPathDir).isDirectory();
 			boolean createdSmartXPathFolder = new File(smartXPathDir).mkdirs();
 			boolean createdAutoHealingJsonFile = false;
@@ -160,11 +187,9 @@ public class AutoHealingController {
 					mapper.enable(SerializationFeature.INDENT_OUTPUT);
 					mapper.writeValue(autoHealingFile, emptyBrokenTestObjects);
 					return autoHealingFile;
-				} else {
-					System.out.println(fileName + ".json already exists");
 				}
 			} else {
-				System.out.println("/" + SmartXPathConstants.SMART_XPATH_FOLER_NAME + " folder does not exist, no file is created");
+				System.out.println("/" + SmartXPathConstants.SMART_XPATH_FOLDER_SUFFIX + " folder does not exist, no file is created");
 			}
 		} catch (Exception e) {
 			e.printStackTrace(System.out);

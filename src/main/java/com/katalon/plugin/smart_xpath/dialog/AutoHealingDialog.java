@@ -1,4 +1,4 @@
-package com.katalon.plugin.smart_xpath;
+package com.katalon.plugin.smart_xpath.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +24,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
+import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
+import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
+
 public class AutoHealingDialog extends Dialog {
 	protected Composite tablePropertyComposite;
 	private String dialogTitle = "";
@@ -32,8 +35,8 @@ public class AutoHealingDialog extends Dialog {
 	private Table table;
 	private List<BrokenTestObject> unapprovedBrokenEntities;
 	private List<BrokenTestObject> approvedAutoHealingEntities;
-	
-	protected AutoHealingDialog(Shell parentShell) {
+
+	public AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
 		unapprovedBrokenEntities = new ArrayList<>();
 		approvedAutoHealingEntities = new ArrayList<>();
@@ -68,6 +71,12 @@ public class AutoHealingDialog extends Dialog {
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		return tablePropertyComposite;
+	}
+
+	@Override
+	protected void configureShell(Shell shell) {
+		super.configureShell(shell);
+		shell.setText("Smart XPath Auto Healing");
 	}
 
 	private void createColumns() {
@@ -152,14 +161,13 @@ public class AutoHealingDialog extends Dialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void okPressed() {
 		approvedAutoHealingEntities.clear();
-		((List<BrokenTestObject>) tbViewer.getInput()).stream().filter(a -> a.getApproved() == true).forEach(a -> {
+		unapprovedBrokenEntities.stream().filter(a -> a != null).filter(a -> a.getApproved() == true).forEach(a -> {
 			approvedAutoHealingEntities.add(a);
-			unapprovedBrokenEntities.remove(a);
 		});
+		unapprovedBrokenEntities.removeIf(a -> a.getApproved());
 		super.okPressed();
 	}
 
@@ -179,8 +187,8 @@ public class AutoHealingDialog extends Dialog {
 		unapprovedBrokenEntities.clear();
 		unapprovedBrokenEntities = AutoHealingController.readUnapprovedBrokenTestObjects();
 	}
-	
-	public List<BrokenTestObject> getUnapprovedAutoHealingEntities(){
+
+	public List<BrokenTestObject> getUnapprovedAutoHealingEntities() {
 		return unapprovedBrokenEntities;
 	}
 

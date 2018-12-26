@@ -1,10 +1,12 @@
-package com.katalon.plugin.smart_xpath;
+package com.katalon.plugin.smart_xpath.dialog;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CheckboxCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
+
+import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
 
 public class CheckBoxColumnEditingSupport extends EditingSupport {
 

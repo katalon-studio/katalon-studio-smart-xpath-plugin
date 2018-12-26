@@ -11,8 +11,16 @@
             point="com.katalon.platform.extensions">
         <point
                 id="thanhto.smartxpathplugin.SmartXPathToolItemWithMenu"
-                extensionPointId="com.katalon.platform.api.extension.ui.toolbar.newDropdownToolItem"
+                extensionPointId="com.katalon.platform.api.extension.newDropdownToolItem"
                 implementationClass="com.katalon.plugin.smart_xpath.SmartXPathToolItemWithMenuDescription">
         </point>
     </extension>
+    <extension
+            point="com.katalon.platform.extensions">
+        <point
+                id="thanhto.smartxpathplugin.SmartXPathPluginActivationListener"
+                extensionPointId="com.katalon.platform.api.extension.pluginActivationListener"
+                implementationClass="com.katalon.plugin.smart_xpath.SmartXPathPluginActivationListener">
+        </point>
+    </extension>    
 </plugin>

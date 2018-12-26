@@ -1,4 +1,4 @@
-package com.katalon.plugin.smart_xpath;
+package com.katalon.plugin.smart_xpath.entity;
 
 import java.util.ArrayList;
 import java.util.List;
