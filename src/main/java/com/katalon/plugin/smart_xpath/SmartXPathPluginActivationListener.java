@@ -3,7 +3,6 @@ package com.katalon.plugin.smart_xpath;
 import com.katalon.platform.api.Plugin;
 import com.katalon.platform.api.extension.PluginActivationListener;
 import com.katalon.platform.api.model.Entity;
-import com.katalon.platform.api.model.ProjectEntity;
 import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
 

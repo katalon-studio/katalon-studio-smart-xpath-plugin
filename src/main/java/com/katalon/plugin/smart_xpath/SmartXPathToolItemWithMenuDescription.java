@@ -200,7 +200,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	@Override
 	public String iconUrl() {
-		return "platform:/plugin/com.katalon.katalon-studio-smart-xpath/icons/bug_16@2x.png";
+		return "platform:/plugin/com.katalon.katalon-studio-smart-xpath/icons/slack_32x24.png";
 	}
 
 	@Override
