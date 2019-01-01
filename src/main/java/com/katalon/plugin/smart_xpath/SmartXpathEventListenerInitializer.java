@@ -13,11 +13,10 @@ public class SmartXpathEventListenerInitializer implements EventListenerInitiali
 	public void registerListener(EventListener eventListener) {
 		eventListener.on(Event.class, event -> {
 			try {
-
+				System.out.println(event.getTopic());
 				if (event.getTopic().equals("KATALON_PLUGIN/CURRENT_PROJECT_CHANGED")) {
-					Entity projectEntity = (Entity) event
-							.getProperty(EventConstants.EVENT_DATA_PROPERTY_NAME);
-					AutoHealingController.createNecessarySmartXPathFiles(projectEntity);
+					Entity projectEntity = (Entity) event.getProperty(EventConstants.EVENT_DATA_PROPERTY_NAME);
+					AutoHealingController.createXPathFilesIfNecessary(projectEntity);
 				}
 			} catch (Exception e) {
 				e.printStackTrace(System.out);

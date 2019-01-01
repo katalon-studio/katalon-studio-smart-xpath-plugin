@@ -7,12 +7,12 @@ import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
 
 public class SmartXPathPluginActivationListener implements PluginActivationListener {
-	
+
 	@Override
-	public void afterActivation(Plugin plugin){
+	public void afterActivation(Plugin plugin) {
 		Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 		if (projectEntity != null) {
-			AutoHealingController.createNecessarySmartXPathFiles(projectEntity);
+			AutoHealingController.createXPathFilesIfNecessary(projectEntity);
 		}
 	}
 

@@ -1,6 +1,5 @@
 package com.katalon.plugin.smart_xpath;
 
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -64,9 +63,9 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		try {
 			Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 			if (currentProject != null) {
-				PluginPreference preferenceStore = ApplicationManager.getInstance().
-						getPreferenceManager().getPluginPreference(currentProject.getId(),
-						"com.katalon.katalon-studio-smart-xpath");
+				AutoHealingController.createXPathFilesIfNecessary(currentProject);
+				PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
+						.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
 				if (preferenceStore.getBoolean("SmartXPathEnabled", false)) {
 					addDisableSmartXPathMenuItem(newMenu, true);
 				} else {
@@ -91,8 +90,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				try {
 					// Retrieve PreferenceStore on click in case user installed
 					// this plug-in when no project was opened
-					Entity currentProject = ApplicationManager.getInstance().getProjectManager()
-							.getCurrentProject();
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 					PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
 							.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
 
@@ -116,8 +114,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				try {
 					// Retrieve PreferenceStore again in case the user installed
 					// the plugin when no project was opened
-					Entity currentProject = ApplicationManager.getInstance().getProjectManager()
-							.getCurrentProject();
+					Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 					PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
 							.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
 
@@ -140,9 +137,10 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				AutoHealingDialog autoHealingDialog = new AutoHealingDialog(parent.getShell());
-				
+
 				if (autoHealingDialog.open() == Window.OK) {
-					List<BrokenTestObject> approvedAutoHealingEntities = autoHealingDialog.getApprovedAutoHealingEntities();
+					List<BrokenTestObject> approvedAutoHealingEntities = autoHealingDialog
+							.getApprovedAutoHealingEntities();
 					List<BrokenTestObject> unapprovedAutoHealingEntities = autoHealingDialog
 							.getUnapprovedAutoHealingEntities();
 
@@ -150,14 +148,17 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 							approvedAutoHealingEntities);
 
 					if (autoHealingSucceeded) {
-						Entity projectEntity = ApplicationManager.getInstance().getProjectManager()
-								.getCurrentProject();
+						Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 						if (projectEntity != null) {
-							String pathToApprovedJson = projectEntity.getFolderLocation() + SmartXPathConstants.APPROVED_FILE_SUFFIX;
-							// Append to approved.json with newly approved broken test objects
+							String pathToApprovedJson = projectEntity.getFolderLocation()
+									+ SmartXPathConstants.APPROVED_FILE_SUFFIX;
+							// Append to approved.json with newly approved
+							// broken test objects
 							doAppendToFileWithBrokenObjects(approvedAutoHealingEntities, pathToApprovedJson);
-							String pathToWaitingForApprovalJson = projectEntity.getFolderLocation() + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
-							// Overwrite waiting-for-approval.json with unapproved broken test objects
+							String pathToWaitingForApprovalJson = projectEntity.getFolderLocation()
+									+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
+							// Overwrite waiting-for-approval.json with
+							// unapproved broken test objects
 							doWriteToFileWithBrokenObjects(unapprovedAutoHealingEntities, pathToWaitingForApprovalJson);
 						}
 					}
@@ -166,30 +167,14 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		});
 		return autoHealing;
 	}
-		
+
 	private void doWriteToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
 		try {
 			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-					monitor.beginTask("Writing to " + filePath  + "...", 1);
-					AutoHealingController.writeToFilesWithBrokenObjects(brokenTestObjectsToUpdate,
-							filePath);
-				}
-			});
-		} catch (Exception ex) {
-			ex.printStackTrace(System.out);
-		}
-	}
-	
-	private void doAppendToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
-		try {
-			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-					monitor.beginTask("Appending to " + filePath  + "...", 1);
-					AutoHealingController.appendToFileWithBrokenObjects(brokenTestObjectsToUpdate,
-							filePath);
+					monitor.beginTask("Writing to " + filePath + "...", 1);
+					AutoHealingController.writeToFilesWithBrokenObjects(brokenTestObjectsToUpdate, filePath);
 				}
 			});
 		} catch (Exception ex) {
@@ -197,6 +182,19 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 		}
 	}
 
+	private void doAppendToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
+		try {
+			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					monitor.beginTask("Appending to " + filePath + "...", 1);
+					AutoHealingController.appendToFileWithBrokenObjects(brokenTestObjectsToUpdate, filePath);
+				}
+			});
+		} catch (Exception ex) {
+			ex.printStackTrace(System.out);
+		}
+	}
 
 	@Override
 	public String iconUrl() {
