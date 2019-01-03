@@ -1,14 +1,15 @@
 package com.katalon.plugin.smart_xpath.controller;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,7 +36,6 @@ import org.xml.sax.SAXException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.katalon.platform.api.model.Entity;
 import com.katalon.platform.api.service.ApplicationManager;
@@ -45,7 +45,7 @@ import com.katalon.plugin.smart_xpath.entity.BrokenTestObjects;
 import com.katalon.plugin.smart_xpath.util.StringUtils;
 
 public class AutoHealingController {
-	public static boolean autoHealBrokenTestObjects(Shell shell, List<BrokenTestObject> approvedAutoHealingEntities) {
+	public static boolean autoHealBrokenTestObjects(Shell shell, Set<BrokenTestObject> approvedAutoHealingEntities) {
 		try {
 			new ProgressMonitorDialog(shell).run(true, false, new IRunnableWithProgress() {
 				@Override
@@ -55,7 +55,7 @@ public class AutoHealingController {
 						autoHealBrokenTestObjects(approvedAutoHealingEntities);
 					} catch (XPathExpressionException | ParserConfigurationException | TransformerException
 							| SAXException | IOException e) {
-						e.printStackTrace(System.out);
+						throw new InvocationTargetException(e);
 					}
 				}
 			});
@@ -66,7 +66,7 @@ public class AutoHealingController {
 		return true;
 	}
 
-	private static void autoHealBrokenTestObjects(List<BrokenTestObject> approvedAutoHealingEntities)
+	private static void autoHealBrokenTestObjects(Set<BrokenTestObject> approvedAutoHealingEntities)
 			throws XPathExpressionException, ParserConfigurationException, TransformerException, SAXException,
 			IOException {
 		Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
@@ -99,7 +99,7 @@ public class AutoHealingController {
 		}
 	}
 
-	public static List<BrokenTestObject> readUnapprovedBrokenTestObjects() {
+	public static Set<BrokenTestObject> readUnapprovedBrokenTestObjects() {
 		try {
 			Gson gson = new Gson();
 			Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
@@ -107,9 +107,9 @@ public class AutoHealingController {
 				String projectDir = projectEntity.getFolderLocation();
 				String jsonAutoHealingDir = StringUtils
 						.getStandardPath(projectDir + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX);
-				JsonReader reader = new JsonReader(new FileReader(jsonAutoHealingDir));
+				JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(jsonAutoHealingDir), StandardCharsets.UTF_8));
 				BrokenTestObjects brokenTestObjects = gson.fromJson(reader, BrokenTestObjects.class);
-				List<BrokenTestObject> unapprovedBrokenTestObjects = brokenTestObjects.getBrokenTestObjects();
+				Set<BrokenTestObject> unapprovedBrokenTestObjects = brokenTestObjects.getBrokenTestObjects();
 				// Remove potential threats
 				unapprovedBrokenTestObjects.removeAll(Collections.singleton(null));
 				return unapprovedBrokenTestObjects;
@@ -128,7 +128,7 @@ public class AutoHealingController {
 	 * Set content of the file to a BrokenTestObjects entity which consists of a
 	 * list of BrokenTestObjects
 	 */
-	public static void writeToFilesWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate,
+	public static void writeToFilesWithBrokenObjects(Set<BrokenTestObject> brokenTestObjectsToUpdate,
 			String filePath) {
 		try {
 			BrokenTestObjects brokenTestObjects = new BrokenTestObjects();
@@ -142,38 +142,6 @@ public class AutoHealingController {
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace(System.out);
-		} catch (IOException e) {
-			e.printStackTrace(System.out);
-		}
-	}
-
-	// Assume a JSON file with a JSON object containing at least a JSON array,
-	// this method
-	// appends @arg1 to @arg2 by replacing "]}" with "@arg1]}"
-	// Note that if the array is initially empty then ",@arg1" will be written
-	// in between,
-	// thus at any given time [0] will be a null object
-	public static void appendToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate,
-			String filePath) {
-		try {
-			RandomAccessFile randomAccessFile = new RandomAccessFile(filePath, "rw");
-			// Set cursor to the position of "]"
-			long pos = randomAccessFile.length();
-			while (randomAccessFile.length() > 0) {
-				pos--;
-				randomAccessFile.seek(pos);
-				if (randomAccessFile.readByte() == ']') {
-					randomAccessFile.seek(pos);
-					break;
-				}
-			}
-			for (BrokenTestObject brokenTestObject : brokenTestObjectsToUpdate) {
-				Gson gson = new GsonBuilder().create();
-				String jsonString = gson.toJson(brokenTestObject);
-				randomAccessFile.writeBytes("\n," + jsonString + "\n");
-			}
-			randomAccessFile.writeBytes("\n]\n}");
-			randomAccessFile.close();
 		} catch (IOException e) {
 			e.printStackTrace(System.out);
 		}
@@ -206,7 +174,33 @@ public class AutoHealingController {
 		}
 		return null;
 	}
-
+	
+	public static void writeBrokenTestObjects(BrokenTestObjects brokenTestObjects, String filePath){
+    	try {
+			ObjectMapper mapper = new ObjectMapper();
+			File file = new File(filePath);
+			if (file.exists()) {
+				mapper.enable(SerializationFeature.INDENT_OUTPUT);
+				mapper.writeValue(file, brokenTestObjects);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(System.out);
+		}
+    }
+    
+	public static BrokenTestObjects readExistingBrokenTestObjects(String filePath) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			File file = new File(filePath);
+			if (file.exists()) {
+				return mapper.readValue(file, BrokenTestObjects.class);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(System.out);
+		}
+		return null;
+	}
+	
 	@SuppressWarnings("unused")
 	private static boolean removeFile(File fileToRemove) {
 		try {

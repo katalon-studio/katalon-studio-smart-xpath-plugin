@@ -1,11 +1,7 @@
 package com.katalon.plugin.smart_xpath;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
+import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -23,6 +19,7 @@ import com.katalon.plugin.smart_xpath.constant.SmartXPathConstants;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
 import com.katalon.plugin.smart_xpath.dialog.AutoHealingDialog;
 import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
+import com.katalon.plugin.smart_xpath.entity.BrokenTestObjects;
 
 public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDescription {
 	private Menu newMenu;
@@ -72,8 +69,6 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 					addEnableSmartXPathMenuItem(newMenu, true);
 				}
 				addLoadAutoHealingEntitiesMenuItem(newMenu, true);
-			} else {
-				addLoadAutoHealingEntitiesMenuItem(newMenu, false);
 			}
 		} catch (ResourceException e) {
 			e.printStackTrace(System.out);
@@ -139,9 +134,9 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				AutoHealingDialog autoHealingDialog = new AutoHealingDialog(parent.getShell());
 
 				if (autoHealingDialog.open() == Window.OK) {
-					List<BrokenTestObject> approvedAutoHealingEntities = autoHealingDialog
+					Set<BrokenTestObject> approvedAutoHealingEntities = autoHealingDialog
 							.getApprovedAutoHealingEntities();
-					List<BrokenTestObject> unapprovedAutoHealingEntities = autoHealingDialog
+					Set<BrokenTestObject> unapprovedAutoHealingEntities = autoHealingDialog
 							.getUnapprovedAutoHealingEntities();
 
 					boolean autoHealingSucceeded = AutoHealingController.autoHealBrokenTestObjects(parent.getShell(),
@@ -150,50 +145,25 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 					if (autoHealingSucceeded) {
 						Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 						if (projectEntity != null) {
+							// Append approved broken test objects to approved.json
 							String pathToApprovedJson = projectEntity.getFolderLocation()
 									+ SmartXPathConstants.APPROVED_FILE_SUFFIX;
-							// Append to approved.json with newly approved
-							// broken test objects
-							doAppendToFileWithBrokenObjects(approvedAutoHealingEntities, pathToApprovedJson);
+							BrokenTestObjects brokenTestObjectsInApprovedJson = AutoHealingController.readExistingBrokenTestObjects(pathToApprovedJson);
+							brokenTestObjectsInApprovedJson.getBrokenTestObjects().addAll(approvedAutoHealingEntities);
+							AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInApprovedJson, pathToApprovedJson);
+							
+							// Replace the content of waiting-for-approval.json with unapproved entities
 							String pathToWaitingForApprovalJson = projectEntity.getFolderLocation()
 									+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
-							// Overwrite waiting-for-approval.json with
-							// unapproved broken test objects
-							doWriteToFileWithBrokenObjects(unapprovedAutoHealingEntities, pathToWaitingForApprovalJson);
+							BrokenTestObjects brokenTestObjectsInWaitingForApprovalJson = AutoHealingController.readExistingBrokenTestObjects(pathToWaitingForApprovalJson);
+							brokenTestObjectsInWaitingForApprovalJson.setBrokenTestObjects(unapprovedAutoHealingEntities);
+							AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInWaitingForApprovalJson, pathToWaitingForApprovalJson);
 						}
 					}
 				}
 			}
 		});
 		return autoHealing;
-	}
-
-	private void doWriteToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
-		try {
-			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-					monitor.beginTask("Writing to " + filePath + "...", 1);
-					AutoHealingController.writeToFilesWithBrokenObjects(brokenTestObjectsToUpdate, filePath);
-				}
-			});
-		} catch (Exception ex) {
-			ex.printStackTrace(System.out);
-		}
-	}
-
-	private void doAppendToFileWithBrokenObjects(List<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
-		try {
-			new ProgressMonitorDialog(parent.getShell()).run(true, false, new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-					monitor.beginTask("Appending to " + filePath + "...", 1);
-					AutoHealingController.appendToFileWithBrokenObjects(brokenTestObjectsToUpdate, filePath);
-				}
-			});
-		} catch (Exception ex) {
-			ex.printStackTrace(System.out);
-		}
 	}
 
 	@Override

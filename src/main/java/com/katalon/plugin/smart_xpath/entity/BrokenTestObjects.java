@@ -1,7 +1,8 @@
 package com.katalon.plugin.smart_xpath.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -9,13 +10,13 @@ public class BrokenTestObjects {
 
 	@SerializedName("brokenTestObjects")
 	@Expose
-	private List<BrokenTestObject> brokenTestObjects = new ArrayList<>();
+	private Set<BrokenTestObject> brokenTestObjects = new HashSet<>();
 
-	public List<BrokenTestObject> getBrokenTestObjects() {
+	public Set<BrokenTestObject> getBrokenTestObjects() {
 		return brokenTestObjects;
 	}
 
-	public void setBrokenTestObjects(List<BrokenTestObject> brokenTestObjects) {
+	public void setBrokenTestObjects(Set<BrokenTestObject> brokenTestObjects) {
 		this.brokenTestObjects = brokenTestObjects;
 	}
 }

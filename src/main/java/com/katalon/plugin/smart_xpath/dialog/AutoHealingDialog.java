@@ -1,7 +1,8 @@
 package com.katalon.plugin.smart_xpath.dialog;
 
-import java.util.ArrayList;
-import java.util.List;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -33,13 +34,13 @@ public class AutoHealingDialog extends Dialog {
 	private TableViewer tbViewer;
 	private TableColumnLayout tableColumnLayout;
 	private Table table;
-	private List<BrokenTestObject> unapprovedBrokenEntities;
-	private List<BrokenTestObject> approvedAutoHealingEntities;
+	private Set<BrokenTestObject> unapprovedBrokenEntities;
+	private Set<BrokenTestObject> approvedAutoHealingEntities;
 
 	public AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
-		unapprovedBrokenEntities = new ArrayList<>();
-		approvedAutoHealingEntities = new ArrayList<>();
+		unapprovedBrokenEntities = new HashSet<>();
+		approvedAutoHealingEntities = new HashSet<>();
 	}
 
 	@Override
@@ -139,11 +140,11 @@ public class AutoHealingDialog extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (table.getSelectionCount() < table.getItemCount()) {
-					((List<BrokenTestObject>) tbViewer.getInput()).stream().forEach(a -> a.setApproved(true));
+					((Set<BrokenTestObject>) tbViewer.getInput()).stream().forEach(a -> a.setApproved(true));
 					table.selectAll();
 					tbViewer.refresh();
 				} else {
-					((List<BrokenTestObject>) tbViewer.getInput()).stream().forEach(a -> a.setApproved(false));
+					((Set<BrokenTestObject>) tbViewer.getInput()).stream().forEach(a -> a.setApproved(false));
 					table.deselectAll();
 					tbViewer.refresh();
 				}
@@ -188,11 +189,11 @@ public class AutoHealingDialog extends Dialog {
 		unapprovedBrokenEntities = AutoHealingController.readUnapprovedBrokenTestObjects();
 	}
 
-	public List<BrokenTestObject> getUnapprovedAutoHealingEntities() {
+	public Set<BrokenTestObject> getUnapprovedAutoHealingEntities() {
 		return unapprovedBrokenEntities;
 	}
 
-	public List<BrokenTestObject> getApprovedAutoHealingEntities() {
+	public Set<BrokenTestObject> getApprovedAutoHealingEntities() {
 		return approvedAutoHealingEntities;
 	}
 }
