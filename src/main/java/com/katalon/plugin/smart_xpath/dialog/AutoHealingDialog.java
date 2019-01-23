@@ -8,9 +8,11 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
@@ -28,9 +30,10 @@ import org.eclipse.swt.widgets.Table;
 import com.katalon.platform.api.controller.TestObjectController;
 import com.katalon.platform.api.exception.ResourceException;
 import com.katalon.platform.api.model.ProjectEntity;
-import com.katalon.platform.api.model.TestObjectEntity;
 import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
+import com.katalon.plugin.smart_xpath.dialog.provider.CheckBoxColumnEditingSupport;
+import com.katalon.plugin.smart_xpath.editors.TestObjectIdCorrectionCellEditor;
 import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
 
 public class AutoHealingDialog extends Dialog {
@@ -41,13 +44,13 @@ public class AutoHealingDialog extends Dialog {
 	private Table table;
 	private Set<BrokenTestObject> unapprovedBrokenEntities;
 	private Set<BrokenTestObject> approvedAutoHealingEntities;
-	private Set<BrokenTestObject> locallyUnreferencedUnapprovedBrokenEntities;
-
+	private boolean shouldShowWarningMessage = false;	
+	private Label lblMessage;
+	
 	public AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
 		unapprovedBrokenEntities = new HashSet<>();
 		approvedAutoHealingEntities = new HashSet<>();
-		locallyUnreferencedUnapprovedBrokenEntities = new HashSet<>();
 	}
 
 	@Override
@@ -65,6 +68,7 @@ public class AutoHealingDialog extends Dialog {
 		tablePropertyComposite.setLayoutData(ldTableComposite);
 		tableColumnLayout = new TableColumnLayout();
 		tablePropertyComposite.setLayout(tableColumnLayout);
+		lblMessage = new Label(tablePropertyComposite, SWT.NONE);
 
 		tbViewer = new TableViewer(tablePropertyComposite,
 				SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
@@ -78,24 +82,16 @@ public class AutoHealingDialog extends Dialog {
 		table = tbViewer.getTable();
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
-		checkAutoHealingEntitiesAgainstObjectRepository();
-
+		
+		if(shouldShowWarningMessage){
+			lblMessage.setText("Some of the Test Object IDs no longer correctly reference the actual Test Objects, please click on 'Incorrect' field to update.");
+		} else {
+			lblMessage.setText("All Test Object IDs correctly reference the actual Test Objects");
+		}
+		
 		return tablePropertyComposite;
 	}
-
-	private void checkAutoHealingEntitiesAgainstObjectRepository() {
-		TestObjectController testObjectController = ApplicationManager.getInstance().getControllerManager().getController(TestObjectController.class);
-		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
-		
-		for(BrokenTestObject unapprovedAutoHealingEntity : approvedAutoHealingEntities){
-			try {
-				TestObjectEntity testObject = testObjectController.getTestObject(currentProject, unapprovedAutoHealingEntity.getTestObjectId());
-			} catch (ResourceException e) {
-				locallyUnreferencedUnapprovedBrokenEntities.add(unapprovedAutoHealingEntity);
-			}
-		}
-	}
-
+	
 	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
@@ -103,6 +99,54 @@ public class AutoHealingDialog extends Dialog {
 	}
 
 	private void createColumns() {
+		TestObjectController testObjectController = ApplicationManager.getInstance().getControllerManager().getController(TestObjectController.class);
+		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+		
+		TableViewerColumn colCorrectTestObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
+		colCorrectTestObjectId.getColumn().setText("Correct Test Object Id");
+		colCorrectTestObjectId.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				try {
+					testObjectController.getTestObject(currentProject, ((BrokenTestObject) element).getTestObjectId());
+					return "Correct";
+				} catch (ResourceException e) {
+					// Do nothing if the test object cannot be found
+				}
+				shouldShowWarningMessage = true;
+				return "Incorrect";
+			}
+		});
+		
+		colCorrectTestObjectId.setEditingSupport(new EditingSupport(tbViewer){
+
+			@Override
+			protected CellEditor getCellEditor(Object element) {
+				if(element instanceof BrokenTestObject){
+					return new TestObjectIdCorrectionCellEditor();
+				}
+				return null;
+			}
+
+			@Override
+			protected boolean canEdit(Object element) {
+				return element instanceof BrokenTestObject;
+			}
+
+			@Override
+			protected Object getValue(Object element) {
+				return ((BrokenTestObject) element).getTestObjectId();
+			}
+
+			@Override
+			protected void setValue(Object element, Object value) {
+				BrokenTestObject brokenTestObject = (BrokenTestObject) element;
+				brokenTestObject.setTestObjectId(String.valueOf(value));
+				tbViewer.refresh(brokenTestObject);
+			}
+			
+		});
+
 		TableViewerColumn colObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
 		colObjectId.getColumn().setText("Test Object Id");
 		colObjectId.setLabelProvider(new ColumnLabelProvider() {
@@ -112,6 +156,7 @@ public class AutoHealingDialog extends Dialog {
 				return testObjectId;
 			}
 		});
+		
 
 		TableViewerColumn colOldXPath = new TableViewerColumn(tbViewer, SWT.NONE);
 		colOldXPath.getColumn().setText("Broken XPath");
