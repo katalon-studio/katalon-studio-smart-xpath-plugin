@@ -1,6 +1,5 @@
 package com.katalon.plugin.smart_xpath.dialog;
 
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,9 +43,8 @@ public class AutoHealingDialog extends Dialog {
 	private Table table;
 	private Set<BrokenTestObject> unapprovedBrokenEntities;
 	private Set<BrokenTestObject> approvedAutoHealingEntities;
-	private boolean shouldShowWarningMessage = false;	
 	private Label lblMessage;
-	
+
 	public AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
 		unapprovedBrokenEntities = new HashSet<>();
@@ -77,21 +75,18 @@ public class AutoHealingDialog extends Dialog {
 
 		tbViewer.setContentProvider(ArrayContentProvider.getInstance());
 		loadAutoHealingEntities();
-		
+
 		table = tbViewer.getTable();
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
-		
-		if(shouldShowWarningMessage){
-			lblMessage.setText("Some of the Test Object IDs no longer correctly reference the actual Test Objects, please click on 'Incorrect' field to update.");
-		} else {
-			lblMessage.setText("All Test Object IDs correctly reference the actual Test Objects");
-		}
+		lblMessage.setText(
+				"Some of the Test Object IDs MAY no longer correctly reference the actual Test Objects, please click on 'Incorrect' field to update.");
+	
 		tbViewer.setInput(unapprovedBrokenEntities);
 
 		return tablePropertyComposite;
 	}
-	
+
 	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
@@ -99,9 +94,10 @@ public class AutoHealingDialog extends Dialog {
 	}
 
 	private void createColumns() {
-		TestObjectController testObjectController = ApplicationManager.getInstance().getControllerManager().getController(TestObjectController.class);
+		TestObjectController testObjectController = ApplicationManager.getInstance().getControllerManager()
+				.getController(TestObjectController.class);
 		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
-		
+
 		TableViewerColumn colCorrectTestObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
 		colCorrectTestObjectId.getColumn().setText("ID status");
 		colCorrectTestObjectId.setLabelProvider(new ColumnLabelProvider() {
@@ -113,17 +109,16 @@ public class AutoHealingDialog extends Dialog {
 				} catch (ResourceException e) {
 					// Do nothing if the test object cannot be found
 				}
-				shouldShowWarningMessage = true;
 				return "Incorrect";
 			}
 		});
-		
-		colCorrectTestObjectId.setEditingSupport(new EditingSupport(tbViewer){
+
+		colCorrectTestObjectId.setEditingSupport(new EditingSupport(tbViewer) {
 
 			@Override
 			protected CellEditor getCellEditor(Object element) {
-				if(element instanceof BrokenTestObject){
-					return new TestObjectIdCorrectionCellEditor();
+				if (element instanceof BrokenTestObject) {
+					return new TestObjectIdCorrectionCellEditor((Composite) getViewer().getControl(), ((BrokenTestObject) element).getTestObjectId());
 				}
 				return null;
 			}
@@ -144,7 +139,7 @@ public class AutoHealingDialog extends Dialog {
 				brokenTestObject.setTestObjectId(String.valueOf(value));
 				tbViewer.refresh(brokenTestObject);
 			}
-			
+
 		});
 
 		TableViewerColumn colObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
@@ -156,7 +151,6 @@ public class AutoHealingDialog extends Dialog {
 				return testObjectId;
 			}
 		});
-		
 
 		TableViewerColumn colOldXPath = new TableViewerColumn(tbViewer, SWT.NONE);
 		colOldXPath.getColumn().setText("Broken XPath");
