@@ -25,6 +25,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
+import com.katalon.platform.api.controller.TestObjectController;
+import com.katalon.platform.api.exception.ResourceException;
+import com.katalon.platform.api.model.ProjectEntity;
+import com.katalon.platform.api.model.TestObjectEntity;
+import com.katalon.platform.api.service.ApplicationManager;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
 import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
 
@@ -36,11 +41,13 @@ public class AutoHealingDialog extends Dialog {
 	private Table table;
 	private Set<BrokenTestObject> unapprovedBrokenEntities;
 	private Set<BrokenTestObject> approvedAutoHealingEntities;
+	private Set<BrokenTestObject> locallyUnreferencedUnapprovedBrokenEntities;
 
 	public AutoHealingDialog(Shell parentShell) {
 		super(parentShell);
 		unapprovedBrokenEntities = new HashSet<>();
 		approvedAutoHealingEntities = new HashSet<>();
+		locallyUnreferencedUnapprovedBrokenEntities = new HashSet<>();
 	}
 
 	@Override
@@ -71,7 +78,22 @@ public class AutoHealingDialog extends Dialog {
 		table = tbViewer.getTable();
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
+		checkAutoHealingEntitiesAgainstObjectRepository();
+
 		return tablePropertyComposite;
+	}
+
+	private void checkAutoHealingEntitiesAgainstObjectRepository() {
+		TestObjectController testObjectController = ApplicationManager.getInstance().getControllerManager().getController(TestObjectController.class);
+		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+		
+		for(BrokenTestObject unapprovedAutoHealingEntity : approvedAutoHealingEntities){
+			try {
+				TestObjectEntity testObject = testObjectController.getTestObject(currentProject, unapprovedAutoHealingEntity.getTestObjectId());
+			} catch (ResourceException e) {
+				locallyUnreferencedUnapprovedBrokenEntities.add(unapprovedAutoHealingEntity);
+			}
+		}
 	}
 
 	@Override
