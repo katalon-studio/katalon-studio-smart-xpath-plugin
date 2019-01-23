@@ -25,6 +25,49 @@ public class BrokenTestObject {
 		this.approved = approved;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((approved == null) ? 0 : approved.hashCode());
+		result = prime * result + ((brokenXPath == null) ? 0 : brokenXPath.hashCode());
+		result = prime * result + ((proposedXPath == null) ? 0 : proposedXPath.hashCode());
+		result = prime * result + ((testObjectId == null) ? 0 : testObjectId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BrokenTestObject other = (BrokenTestObject) obj;
+		if (approved == null) {
+			if (other.approved != null)
+				return false;
+		} else if (!approved.equals(other.approved))
+			return false;
+		if (brokenXPath == null) {
+			if (other.brokenXPath != null)
+				return false;
+		} else if (!brokenXPath.equals(other.brokenXPath))
+			return false;
+		if (proposedXPath == null) {
+			if (other.proposedXPath != null)
+				return false;
+		} else if (!proposedXPath.equals(other.proposedXPath))
+			return false;
+		if (testObjectId == null) {
+			if (other.testObjectId != null)
+				return false;
+		} else if (!testObjectId.equals(other.testObjectId))
+			return false;
+		return true;
+	}
+
 	public String getProposedXPath() {
 		return proposedXPath;
 	}
