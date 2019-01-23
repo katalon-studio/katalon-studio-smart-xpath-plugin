@@ -68,7 +68,7 @@ public class AutoHealingDialog extends Dialog {
 		tablePropertyComposite.setLayoutData(ldTableComposite);
 		tableColumnLayout = new TableColumnLayout();
 		tablePropertyComposite.setLayout(tableColumnLayout);
-		lblMessage = new Label(tablePropertyComposite, SWT.NONE);
+		lblMessage = new Label(parent, SWT.NONE);
 
 		tbViewer = new TableViewer(tablePropertyComposite,
 				SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
@@ -77,8 +77,7 @@ public class AutoHealingDialog extends Dialog {
 
 		tbViewer.setContentProvider(ArrayContentProvider.getInstance());
 		loadAutoHealingEntities();
-		tbViewer.setInput(unapprovedBrokenEntities);
-
+		
 		table = tbViewer.getTable();
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
@@ -88,7 +87,8 @@ public class AutoHealingDialog extends Dialog {
 		} else {
 			lblMessage.setText("All Test Object IDs correctly reference the actual Test Objects");
 		}
-		
+		tbViewer.setInput(unapprovedBrokenEntities);
+
 		return tablePropertyComposite;
 	}
 	
@@ -103,7 +103,7 @@ public class AutoHealingDialog extends Dialog {
 		ProjectEntity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 		
 		TableViewerColumn colCorrectTestObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
-		colCorrectTestObjectId.getColumn().setText("Correct Test Object Id");
+		colCorrectTestObjectId.getColumn().setText("ID status");
 		colCorrectTestObjectId.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -148,7 +148,7 @@ public class AutoHealingDialog extends Dialog {
 		});
 
 		TableViewerColumn colObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
-		colObjectId.getColumn().setText("Test Object Id");
+		colObjectId.getColumn().setText("Test Object ID");
 		colObjectId.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -189,6 +189,7 @@ public class AutoHealingDialog extends Dialog {
 
 		colApproveNewXPath.setEditingSupport(new CheckBoxColumnEditingSupport(tbViewer));
 
+		tableColumnLayout.setColumnData(colCorrectTestObjectId.getColumn(), new ColumnWeightData(10, 100));
 		tableColumnLayout.setColumnData(colObjectId.getColumn(), new ColumnWeightData(35, 100));
 		tableColumnLayout.setColumnData(colOldXPath.getColumn(), new ColumnWeightData(30, 100));
 		tableColumnLayout.setColumnData(colNewXPath.getColumn(), new ColumnWeightData(30, 100));

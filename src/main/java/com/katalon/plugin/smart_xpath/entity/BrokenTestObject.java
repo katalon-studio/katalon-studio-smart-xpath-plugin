@@ -48,5 +48,14 @@ public class BrokenTestObject {
 	public void setBrokenXPath(String brokenXPath) {
 		this.brokenXPath = brokenXPath;
 	}
+	
+	@Override
+	public boolean equals(Object obj){
+		BrokenTestObject brokenTestObject = (BrokenTestObject) obj;
+		return this.getApproved().equals(brokenTestObject.getApproved())
+				&& this.getBrokenXPath().equals(brokenTestObject.getBrokenXPath())
+				&& this.getProposedXPath().equals(brokenTestObject.getProposedXPath())
+				&& this.getTestObjectId().equals(brokenTestObject.getTestObjectId());
+	}
 
 }
