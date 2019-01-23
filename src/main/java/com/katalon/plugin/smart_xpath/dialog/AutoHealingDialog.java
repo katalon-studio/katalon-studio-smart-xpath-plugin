@@ -81,7 +81,7 @@ public class AutoHealingDialog extends Dialog {
 		table.setLinesVisible(true);
 		lblMessage.setText(
 				"Some of the Test Object IDs MAY no longer correctly reference the actual Test Objects, please click on 'Incorrect' field to update.");
-	
+		
 		tbViewer.setInput(unapprovedBrokenEntities);
 
 		return tablePropertyComposite;
