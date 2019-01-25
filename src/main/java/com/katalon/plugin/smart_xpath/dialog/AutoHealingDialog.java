@@ -2,6 +2,7 @@ package com.katalon.plugin.smart_xpath.dialog;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -170,7 +171,11 @@ public class AutoHealingDialog extends Dialog {
 		unapprovedBrokenEntities.stream().filter(a -> a != null).filter(a -> a.getApproved() == true).forEach(a -> {
 			approvedAutoHealingEntities.add(a);
 		});
-		unapprovedBrokenEntities.removeIf(a -> a.getApproved());
+		
+		unapprovedBrokenEntities = unapprovedBrokenEntities.stream()
+				.filter(a -> !a.getApproved())
+				.collect(Collectors.toSet());
+
 		super.okPressed();
 	}
 
@@ -189,6 +194,9 @@ public class AutoHealingDialog extends Dialog {
 	public void loadAutoHealingEntities() {
 		unapprovedBrokenEntities.clear();
 		unapprovedBrokenEntities = AutoHealingController.readUnapprovedBrokenTestObjects();
+		unapprovedBrokenEntities = unapprovedBrokenEntities.stream()
+				.filter(a -> !a.getApproved())
+				.collect(Collectors.toSet());
 	}
 
 	public Set<BrokenTestObject> getUnapprovedAutoHealingEntities() {
