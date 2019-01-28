@@ -159,6 +159,8 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 								+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
 						BrokenTestObjects brokenTestObjectsInWaitingForApprovalJson = AutoHealingController
 								.readExistingBrokenTestObjects(pathToWaitingForApprovalJson);
+						// Unapprove objects that could not be healed
+						approvedButUnableToHealEntities.forEach(a -> a.setApproved(false));
 						unapprovedAutoHealingEntities.addAll(approvedButUnableToHealEntities);
 						brokenTestObjectsInWaitingForApprovalJson.setBrokenTestObjects(unapprovedAutoHealingEntities);
 						AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInWaitingForApprovalJson,
