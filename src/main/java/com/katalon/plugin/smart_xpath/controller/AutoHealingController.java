@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -41,24 +42,26 @@ import com.katalon.plugin.smart_xpath.entity.BrokenTestObjects;
 import com.katalon.plugin.smart_xpath.util.StringUtils;
 
 public class AutoHealingController {
-	public static boolean autoHealBrokenTestObjects(Shell shell, Set<BrokenTestObject> approvedAutoHealingEntities) {
+	public static Set<BrokenTestObject> autoHealBrokenTestObjects(Shell shell, Set<BrokenTestObject> approvedAutoHealingEntities) {
+		final Set<BrokenTestObject> approvedButCannotBeHealedEntities = new HashSet<>();
+		approvedButCannotBeHealedEntities.clear();
 		try {
 			new ProgressMonitorDialog(shell).run(true, false, new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 					monitor.beginTask("Auto healing broken test objects ... ", 1);
-						autoHealBrokenTestObjects(approvedAutoHealingEntities);
+					approvedButCannotBeHealedEntities.addAll(autoHealBrokenTestObjects(approvedAutoHealingEntities));
 				}
 			});
 		} catch (Exception ex) {
 			ex.printStackTrace(System.out);
-			return false;
 		}
-		return true;
+		return approvedButCannotBeHealedEntities;
 	}
 
-	private static void autoHealBrokenTestObjects(Set<BrokenTestObject> approvedAutoHealingEntities) {
+	private static Set<BrokenTestObject> autoHealBrokenTestObjects(Set<BrokenTestObject> approvedAutoHealingEntities) {
 		Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+		Set<BrokenTestObject> approvedButCannotBeHealedEntities = new HashSet<>();
 		if (currentProject != null) {
 			String currentProjectDir = currentProject.getFolderLocation();
 			for (BrokenTestObject brokenTestObject : approvedAutoHealingEntities) {
@@ -87,13 +90,18 @@ public class AutoHealingController {
 					System.out.println("Updated " + brokenTestObject.getTestObjectId());
 				} catch (IOException e1) {
 					System.out.println(brokenTestObject.getTestObjectId() + " cannot be found in your project ! Skipping this object ...");
+					approvedButCannotBeHealedEntities.add(brokenTestObject);
 				} catch(XPathExpressionException e2){
 					System.out.println(brokenTestObject.getTestObjectId() + ".rs has been changed in a way that we can't find and update XPath field ! Skipping this object ...");
+					approvedButCannotBeHealedEntities.add(brokenTestObject);
 				} catch(Exception e3){
 					e3.printStackTrace(System.out);
+					System.out.println("Unexpected error occurs ! Skipping this object ... ");
+					approvedButCannotBeHealedEntities.add(brokenTestObject);
 				}
 			}
 		}
+		return approvedButCannotBeHealedEntities;
 	}
 
 	public static Set<BrokenTestObject> readUnapprovedBrokenTestObjects() {

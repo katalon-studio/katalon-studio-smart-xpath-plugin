@@ -139,27 +139,32 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 					Set<BrokenTestObject> unapprovedAutoHealingEntities = autoHealingDialog
 							.getUnapprovedAutoHealingEntities();
 
-					boolean autoHealingSucceeded = AutoHealingController.autoHealBrokenTestObjects(parent.getShell(),
-							approvedAutoHealingEntities);
+					Set<BrokenTestObject> approvedButUnableToHealEntities = AutoHealingController
+							.autoHealBrokenTestObjects(parent.getShell(), approvedAutoHealingEntities);
 
-					if (autoHealingSucceeded) {
-						Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
-						if (projectEntity != null) {
-							// Append approved broken test objects to approved.json
-							String pathToApprovedJson = projectEntity.getFolderLocation()
-									+ SmartXPathConstants.APPROVED_FILE_SUFFIX;
-							BrokenTestObjects brokenTestObjectsInApprovedJson = AutoHealingController.readExistingBrokenTestObjects(pathToApprovedJson);
-							brokenTestObjectsInApprovedJson.getBrokenTestObjects().addAll(approvedAutoHealingEntities);
-							AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInApprovedJson, pathToApprovedJson);
-							
-							// Replace the content of waiting-for-approval.json with unapproved entities
-							String pathToWaitingForApprovalJson = projectEntity.getFolderLocation()
-									+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
-							BrokenTestObjects brokenTestObjectsInWaitingForApprovalJson = AutoHealingController.readExistingBrokenTestObjects(pathToWaitingForApprovalJson);
-							brokenTestObjectsInWaitingForApprovalJson.setBrokenTestObjects(unapprovedAutoHealingEntities);
-							AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInWaitingForApprovalJson, pathToWaitingForApprovalJson);
-						}
+					Entity projectEntity = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
+					if (projectEntity != null) {
+						// Append approved broken test objects to approved.json
+						String pathToApprovedJson = projectEntity.getFolderLocation()
+								+ SmartXPathConstants.APPROVED_FILE_SUFFIX;
+						BrokenTestObjects brokenTestObjectsInApprovedJson = AutoHealingController
+								.readExistingBrokenTestObjects(pathToApprovedJson);
+						brokenTestObjectsInApprovedJson.getBrokenTestObjects().addAll(approvedAutoHealingEntities);
+						AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInApprovedJson,
+								pathToApprovedJson);
+
+						// Replace the content of waiting-for-approval.json with
+						// unapproved entities
+						String pathToWaitingForApprovalJson = projectEntity.getFolderLocation()
+								+ SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX;
+						BrokenTestObjects brokenTestObjectsInWaitingForApprovalJson = AutoHealingController
+								.readExistingBrokenTestObjects(pathToWaitingForApprovalJson);
+						unapprovedAutoHealingEntities.addAll(approvedButUnableToHealEntities);
+						brokenTestObjectsInWaitingForApprovalJson.setBrokenTestObjects(unapprovedAutoHealingEntities);
+						AutoHealingController.writeBrokenTestObjects(brokenTestObjectsInWaitingForApprovalJson,
+								pathToWaitingForApprovalJson);
 					}
+
 				}
 			}
 		});
