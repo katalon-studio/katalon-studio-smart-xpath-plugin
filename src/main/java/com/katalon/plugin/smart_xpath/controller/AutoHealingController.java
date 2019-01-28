@@ -13,10 +13,8 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -31,8 +29,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Shell;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.gson.Gson;
@@ -51,12 +47,7 @@ public class AutoHealingController {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 					monitor.beginTask("Auto healing broken test objects ... ", 1);
-					try {
 						autoHealBrokenTestObjects(approvedAutoHealingEntities);
-					} catch (XPathExpressionException | ParserConfigurationException | TransformerException
-							| SAXException | IOException e) {
-						throw new InvocationTargetException(e);
-					}
 				}
 			});
 		} catch (Exception ex) {
@@ -66,35 +57,41 @@ public class AutoHealingController {
 		return true;
 	}
 
-	private static void autoHealBrokenTestObjects(Set<BrokenTestObject> approvedAutoHealingEntities)
-			throws XPathExpressionException, ParserConfigurationException, TransformerException, SAXException,
-			IOException {
+	private static void autoHealBrokenTestObjects(Set<BrokenTestObject> approvedAutoHealingEntities) {
 		Entity currentProject = ApplicationManager.getInstance().getProjectManager().getCurrentProject();
 		if (currentProject != null) {
 			String currentProjectDir = currentProject.getFolderLocation();
 			for (BrokenTestObject brokenTestObject : approvedAutoHealingEntities) {
-				String pathToThisTestObject = StringUtils
-						.getStandardPath(currentProjectDir + "/" + brokenTestObject.getTestObjectId() + ".rs");
-				DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-				Document doc = docBuilder.parse(pathToThisTestObject);
-				// Update the first XPATH value in selectorCollection (i.e
-				// default XPath value)
-				XPath xPathToBrokenXPath = XPathFactory.newInstance().newXPath();
-				Node nodeBrokenXPath = (Node) xPathToBrokenXPath
-						.compile("//selectorCollection//key[text()='XPATH'][1]/following::value[1]")
-						.evaluate(doc, XPathConstants.NODE);
-				nodeBrokenXPath.setTextContent(brokenTestObject.getProposedXPath());
+				try {
+					String pathToThisTestObject = StringUtils
+							.getStandardPath(currentProjectDir + "/" + brokenTestObject.getTestObjectId() + ".rs");
+					DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+					DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+					Document doc = docBuilder.parse(pathToThisTestObject);
+					// Update the first XPATH value in selectorCollection (i.e
+					// default XPath value)
+					XPath xPathToBrokenXPath = XPathFactory.newInstance().newXPath();
+					Node nodeBrokenXPath = (Node) xPathToBrokenXPath
+							.compile("//selectorCollection//key[text()='XPATH'][1]/following::value[1]")
+							.evaluate(doc, XPathConstants.NODE);
+					nodeBrokenXPath.setTextContent(brokenTestObject.getProposedXPath());
 
-				Transformer tf = TransformerFactory.newInstance().newTransformer();
-				tf.setOutputProperty(OutputKeys.INDENT, "yes");
-				tf.setOutputProperty(OutputKeys.METHOD, "xml");
-				tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+					Transformer tf = TransformerFactory.newInstance().newTransformer();
+					tf.setOutputProperty(OutputKeys.INDENT, "yes");
+					tf.setOutputProperty(OutputKeys.METHOD, "xml");
+					tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-				DOMSource domSource = new DOMSource(doc);
-				StreamResult sr = new StreamResult(pathToThisTestObject);
-				tf.transform(domSource, sr);
-				System.out.println("Updated " + brokenTestObject.getTestObjectId());
+					DOMSource domSource = new DOMSource(doc);
+					StreamResult sr = new StreamResult(pathToThisTestObject);
+					tf.transform(domSource, sr);
+					System.out.println("Updated " + brokenTestObject.getTestObjectId());
+				} catch (IOException e1) {
+					System.out.println(brokenTestObject.getTestObjectId() + " cannot be found in your project ! Skipping this object ...");
+				} catch(XPathExpressionException e2){
+					System.out.println(brokenTestObject.getTestObjectId() + ".rs has been changed in a way that we can't find and update XPath field ! Skipping this object ...");
+				} catch(Exception e3){
+					e3.printStackTrace(System.out);
+				}
 			}
 		}
 	}
@@ -107,7 +104,8 @@ public class AutoHealingController {
 				String projectDir = projectEntity.getFolderLocation();
 				String jsonAutoHealingDir = StringUtils
 						.getStandardPath(projectDir + SmartXPathConstants.WAITING_FOR_APPROVAL_FILE_SUFFIX);
-				JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(jsonAutoHealingDir), StandardCharsets.UTF_8));
+				JsonReader reader = new JsonReader(
+						new InputStreamReader(new FileInputStream(jsonAutoHealingDir), StandardCharsets.UTF_8));
 				BrokenTestObjects brokenTestObjects = gson.fromJson(reader, BrokenTestObjects.class);
 				Set<BrokenTestObject> unapprovedBrokenTestObjects = brokenTestObjects.getBrokenTestObjects();
 				// Remove potential threats
@@ -128,8 +126,7 @@ public class AutoHealingController {
 	 * Set content of the file to a BrokenTestObjects entity which consists of a
 	 * list of BrokenTestObjects
 	 */
-	public static void writeToFilesWithBrokenObjects(Set<BrokenTestObject> brokenTestObjectsToUpdate,
-			String filePath) {
+	public static void writeToFilesWithBrokenObjects(Set<BrokenTestObject> brokenTestObjectsToUpdate, String filePath) {
 		try {
 			BrokenTestObjects brokenTestObjects = new BrokenTestObjects();
 			brokenTestObjects.setBrokenTestObjects(brokenTestObjectsToUpdate);
@@ -174,9 +171,9 @@ public class AutoHealingController {
 		}
 		return null;
 	}
-	
-	public static void writeBrokenTestObjects(BrokenTestObjects brokenTestObjects, String filePath){
-    	try {
+
+	public static void writeBrokenTestObjects(BrokenTestObjects brokenTestObjects, String filePath) {
+		try {
 			ObjectMapper mapper = new ObjectMapper();
 			File file = new File(filePath);
 			if (file.exists()) {
@@ -186,8 +183,8 @@ public class AutoHealingController {
 		} catch (Exception e) {
 			e.printStackTrace(System.out);
 		}
-    }
-    
+	}
+
 	public static BrokenTestObjects readExistingBrokenTestObjects(String filePath) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
@@ -200,7 +197,7 @@ public class AutoHealingController {
 		}
 		return null;
 	}
-	
+
 	@SuppressWarnings("unused")
 	private static boolean removeFile(File fileToRemove) {
 		try {
