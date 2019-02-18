@@ -1,8 +1,14 @@
-#Intellj
-.idea/**
+#Maven
+target
 
 #Eclipse
-bin/**
+bin
+.project
+.classpath
+.settings
 
-#Maven
-target/**
+#IntellJ
+.idea
+
+#VS Code
+.vscode
