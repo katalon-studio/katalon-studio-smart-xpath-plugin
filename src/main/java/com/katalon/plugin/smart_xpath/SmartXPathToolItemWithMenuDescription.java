@@ -77,7 +77,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	private MenuItem addEnableSmartXPathMenuItem(Menu parentMenu, boolean enable) {
 		smartXPathEnable = new MenuItem(parentMenu, SWT.PUSH);
-		smartXPathEnable.setText("Smart XPath Enable");
+		smartXPathEnable.setText("Enable Smart XPath");
 		smartXPathEnable.setToolTipText("Enable Smart XPath");
 		smartXPathEnable.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -101,7 +101,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 
 	private MenuItem addDisableSmartXPathMenuItem(Menu parentMenu, boolean enable) {
 		smartXPathDisable = new MenuItem(parentMenu, SWT.PUSH);
-		smartXPathDisable.setText("Smart XPath Disable");
+		smartXPathDisable.setText("Disable Smart XPath");
 		smartXPathDisable.setToolTipText("Disable Smart XPath");
 		smartXPathDisable.addSelectionListener(new SelectionAdapter() {
 			@Override
