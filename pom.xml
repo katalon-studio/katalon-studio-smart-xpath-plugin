@@ -11,7 +11,7 @@
 	</parent>
 
 	<groupId>com.katalon</groupId>
-	<artifactId>katalon-studio-smart-xpath</artifactId>
+	<artifactId>katalon-studio-smart-xpath-plugin</artifactId>
 	<version>1.0.6</version>
 
 	<packaging>bundle</packaging>
