@@ -59,7 +59,7 @@ public class AutoHealingDialog extends Dialog {
 		tablePropertyComposite.setLayoutData(ldTableComposite);
 		tableColumnLayout = new TableColumnLayout();
 		tablePropertyComposite.setLayout(tableColumnLayout);
-
+		
 		tbViewer = new TableViewer(tablePropertyComposite,
 				SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
 
@@ -72,7 +72,6 @@ public class AutoHealingDialog extends Dialog {
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		tbViewer.setInput(unapprovedBrokenEntities);
-
 		return tablePropertyComposite;
 	}
 
@@ -157,6 +156,7 @@ public class AutoHealingDialog extends Dialog {
 		// Create a spacer label
 		Label spacer = new Label(parent, SWT.NONE);
 		spacer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		spacer.setText("Please refresh the Object Repository to see XPath values updated after approval");
 		// Update layout of the parent composite to count the spacer
 		GridLayout layout = (GridLayout) parent.getLayout();
 		layout.numColumns++;
