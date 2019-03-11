@@ -16,6 +16,17 @@ public class BrokenTestObject {
 	@SerializedName("brokenXPath")
 	@Expose
 	private String brokenXPath;
+	@SerializedName("pathToScreenshot")
+	@Expose
+	private String pathToScreenshot;
+
+	public String getPathToScreenshot() {
+		return pathToScreenshot;
+	}
+
+	public void setPathToScreenshot(String pathToScreenshot) {
+		this.pathToScreenshot = pathToScreenshot;
+	}
 
 	public Boolean getApproved() {
 		return approved;
@@ -31,6 +42,7 @@ public class BrokenTestObject {
 		int result = 1;
 		result = prime * result + ((approved == null) ? 0 : approved.hashCode());
 		result = prime * result + ((brokenXPath == null) ? 0 : brokenXPath.hashCode());
+		result = prime * result + ((pathToScreenshot == null) ? 0 : pathToScreenshot.hashCode());
 		result = prime * result + ((proposedXPath == null) ? 0 : proposedXPath.hashCode());
 		result = prime * result + ((testObjectId == null) ? 0 : testObjectId.hashCode());
 		return result;
@@ -54,6 +66,11 @@ public class BrokenTestObject {
 			if (other.brokenXPath != null)
 				return false;
 		} else if (!brokenXPath.equals(other.brokenXPath))
+			return false;
+		if (pathToScreenshot == null) {
+			if (other.pathToScreenshot != null)
+				return false;
+		} else if (!pathToScreenshot.equals(other.pathToScreenshot))
 			return false;
 		if (proposedXPath == null) {
 			if (other.proposedXPath != null)
