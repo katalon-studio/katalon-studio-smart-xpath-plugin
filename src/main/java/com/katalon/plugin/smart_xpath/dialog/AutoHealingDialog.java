@@ -1,11 +1,15 @@
 package com.katalon.plugin.smart_xpath.dialog;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -15,16 +19,20 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 
+import com.katalon.platform.ui.viewer.HyperLinkColumnLabelProvider;
 import com.katalon.plugin.smart_xpath.controller.AutoHealingController;
 import com.katalon.plugin.smart_xpath.dialog.provider.CheckBoxColumnEditingSupport;
 import com.katalon.plugin.smart_xpath.entity.BrokenTestObject;
@@ -46,7 +54,7 @@ public class AutoHealingDialog extends Dialog {
 
 	@Override
 	public void create() {
-		setShellStyle(SWT.DIALOG_TRIM);
+		setShellStyle(SWT.SHELL_TRIM);
 		super.create();
 	}
 
@@ -54,14 +62,13 @@ public class AutoHealingDialog extends Dialog {
 	protected Control createDialogArea(Composite parent) {
 		tablePropertyComposite = new Composite(parent, SWT.NONE);
 		GridData ldTableComposite = new GridData(SWT.FILL, SWT.FILL, true, true);
-		ldTableComposite.widthHint = 1000;
+		ldTableComposite.widthHint = 1200;
 		ldTableComposite.heightHint = 380;
 		tablePropertyComposite.setLayoutData(ldTableComposite);
 		tableColumnLayout = new TableColumnLayout();
 		tablePropertyComposite.setLayout(tableColumnLayout);
-		
-		tbViewer = new TableViewer(tablePropertyComposite,
-				SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
+
+		tbViewer = new TableViewer(tablePropertyComposite, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER);
 
 		createColumns();
 
@@ -82,7 +89,7 @@ public class AutoHealingDialog extends Dialog {
 	}
 
 	private void createColumns() {
-		
+
 		TableViewerColumn colObjectId = new TableViewerColumn(tbViewer, SWT.NONE);
 		colObjectId.getColumn().setText("Test Object ID");
 		colObjectId.setLabelProvider(new ColumnLabelProvider() {
@@ -112,6 +119,50 @@ public class AutoHealingDialog extends Dialog {
 				return newXPath;
 			}
 		});
+		
+
+		TableViewerColumn colScreenshot = new TableViewerColumn(tbViewer, SWT.NONE);
+		colScreenshot.getColumn().setText("Screenshot");
+		colScreenshot.setLabelProvider(new HyperLinkColumnLabelProvider<BrokenTestObject>(3) {
+
+			@Override
+			protected void handleMouseDown(MouseEvent e, ViewerCell cell) {
+				BrokenTestObject brokenTestObj = (BrokenTestObject) cell.getElement();
+				if (Desktop.isDesktopSupported()) {
+				    try {
+				        File myFile = new File(brokenTestObj.getPathToScreenshot());
+				        // Open the folder containing this image
+				        Desktop.getDesktop().open(myFile.getParentFile());
+				    } catch (NullPointerException nullPointerEx) {
+				        MessageDialog.openError(null, "Error", "This broken object does not have a screenshot.");
+				    } catch (IOException ioEx) {
+				    	MessageDialog.openError(null, "Error", ioEx.getMessage());
+					} catch(IllegalArgumentException illegalArgEx){
+						MessageDialog.openError(null, "Error", "Screenshot no longer exists at this path.");
+					} catch(UnsupportedOperationException unsupportedOpEx){
+						MessageDialog.openError(null, "Error", "This platform does not support open action.");
+					} catch(SecurityException secEx){
+						MessageDialog.openError(null, "Error", "Read access is denied.");
+					}
+				}
+			}
+
+			@Override
+			protected Class<BrokenTestObject> getElementType() {
+				return BrokenTestObject.class;
+			}
+
+			@Override
+			protected Image getImage(BrokenTestObject element) {
+				return null;
+			}
+
+			@Override
+			protected String getText(BrokenTestObject element) {
+				return "Preview";
+			}
+		});
+
 
 		TableViewerColumn colApproveNewXPath = new TableViewerColumn(tbViewer, SWT.NONE);
 		colApproveNewXPath.getColumn().setText("Approve");
@@ -127,7 +178,8 @@ public class AutoHealingDialog extends Dialog {
 		tableColumnLayout.setColumnData(colObjectId.getColumn(), new ColumnWeightData(35, 100));
 		tableColumnLayout.setColumnData(colOldXPath.getColumn(), new ColumnWeightData(30, 100));
 		tableColumnLayout.setColumnData(colNewXPath.getColumn(), new ColumnWeightData(30, 100));
-		tableColumnLayout.setColumnData(colApproveNewXPath.getColumn(), new ColumnWeightData(5, 100));
+		tableColumnLayout.setColumnData(colScreenshot.getColumn(), new ColumnWeightData(5, 100));
+		tableColumnLayout.setColumnData(colApproveNewXPath.getColumn(), new ColumnWeightData(5, 50));
 	}
 
 	@Override
@@ -171,9 +223,8 @@ public class AutoHealingDialog extends Dialog {
 		unapprovedBrokenEntities.stream().filter(a -> a != null).filter(a -> a.getApproved() == true).forEach(a -> {
 			approvedAutoHealingEntities.add(a);
 		});
-		
-		unapprovedBrokenEntities = unapprovedBrokenEntities.stream()
-				.filter(a -> !a.getApproved())
+
+		unapprovedBrokenEntities = unapprovedBrokenEntities.stream().filter(a -> !a.getApproved())
 				.collect(Collectors.toSet());
 
 		super.okPressed();
@@ -194,8 +245,7 @@ public class AutoHealingDialog extends Dialog {
 	public void loadAutoHealingEntities() {
 		unapprovedBrokenEntities.clear();
 		unapprovedBrokenEntities = AutoHealingController.readUnapprovedBrokenTestObjects();
-		unapprovedBrokenEntities = unapprovedBrokenEntities.stream()
-				.filter(a -> !a.getApproved())
+		unapprovedBrokenEntities = unapprovedBrokenEntities.stream().filter(a -> !a.getApproved())
 				.collect(Collectors.toSet());
 	}
 
