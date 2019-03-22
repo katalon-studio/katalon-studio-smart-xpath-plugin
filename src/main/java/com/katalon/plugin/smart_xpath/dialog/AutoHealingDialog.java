@@ -132,7 +132,7 @@ public class AutoHealingDialog extends Dialog {
 				    try {
 				        File myFile = new File(brokenTestObj.getPathToScreenshot());
 				        // Open the folder containing this image
-				        Desktop.getDesktop().open(myFile.getParentFile());
+				        Desktop.getDesktop().open(myFile);
 				    } catch (NullPointerException nullPointerEx) {
 				        MessageDialog.openError(null, "Error", "This broken object does not have a screenshot.");
 				    } catch (IOException ioEx) {
