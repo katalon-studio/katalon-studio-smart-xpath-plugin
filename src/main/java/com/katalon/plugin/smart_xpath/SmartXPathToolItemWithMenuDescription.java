@@ -63,7 +63,7 @@ public class SmartXPathToolItemWithMenuDescription implements ToolItemWithMenuDe
 				AutoHealingController.createXPathFilesIfNecessary(currentProject);
 				PluginPreference preferenceStore = ApplicationManager.getInstance().getPreferenceManager()
 						.getPluginPreference(currentProject.getId(), "com.katalon.katalon-studio-smart-xpath");
-				if (preferenceStore.getBoolean("SmartXPathEnabled", false)) {
+				if (preferenceStore.getBoolean("SmartXPathEnabled", true)) {
 					addDisableSmartXPathMenuItem(newMenu, true);
 				} else {
 					addEnableSmartXPathMenuItem(newMenu, true);
